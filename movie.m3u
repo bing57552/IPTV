@@ -1,0 +1,62 @@
+#EXTM3U
+
+# =========================
+#      台湾电影频道
+# =========================
+#EXTINF:-1 tvg-name="龙祥电影" group-title="电影", 龙祥电影台
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tw_ls_movies.m3u8
+
+#EXTINF:-1 tvg-name="纬来电影" group-title="电影", 纬来电影台
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tw_videoland_movies.m3u8
+
+#EXTINF:-1 tvg-name="东森电影" group-title="电影", 东森电影台
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tw_ettv_movies.m3u8
+
+#EXTINF:-1 tvg-name="卫视电影台" group-title="电影", 卫视电影台
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tw_star_chinese_movies.m3u8
+
+
+# =========================
+#      大陆电影频道
+# =========================
+#EXTINF:-1 tvg-name="CCTV-6" group-title="电影", CCTV-6 电影频道
+http://live.zbds.top/cctv/cctv6.m3u8
+
+#EXTINF:-1 tvg-name="1905电影" group-title="电影", 1905 电影频道
+http://live.zbds.top/cctv/1905.m3u8
+
+#EXTINF:-1 tvg-name="东方电影" group-title="电影", 东方电影频道
+http://live.zbds.top/local/sh_dianying.m3u8
+
+
+# =========================
+#   新马华语电影频道
+# =========================
+#EXTINF:-1 tvg-name="天映电影" group-title="电影", Celestial Movies
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/my_celestial_movies.m3u8
+
+#EXTINF:-1 tvg-name="天映经典" group-title="电影", Celestial Classic Movies
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/my_celestial_classic.m3u8
+
+
+# =========================
+#   Astro 电影频道
+# =========================
+#EXTINF:-1 tvg-name="Astro AOD 311" group-title="电影", Astro AOD 311
+http://50.7.161.82:8278/streams/d/AstroAOD/playlist.m3u8
+
+#EXTINF:-1 tvg-name="Astro AOD 352" group-title="电影", Astro AOD 352
+http://50.7.161.82:8278/streams/d/AstroAOD352/playlist.m3u8
+
+
+# =========================
+#   CATCHPLAY 电影频道
+# =========================
+#EXTINF:-1 tvg-name="CATCHPLAY Movies" group-title="电影", CATCHPLAY 电影台
+https://d3j7ofexbkpjkf.cloudfront.net/CH_CATCHPLAY/index.m3u8
+
+#EXTINF:-1 tvg-name="CATCHPLAY Action" group-title="电影", CATCHPLAY 动作电影
+https://d3j7ofexbkpjkf.cloudfront.net/CH_CATCHPLAY_ACTION/index.m3u8
+
+#EXTINF:-1 tvg-name="CATCHPLAY Family" group-title="电影", CATCHPLAY 家庭电影
+https://d3j7ofexbkpjkf.cloudfront.net/CH_CATCHPLAY_FAMILY/index.m3u8
