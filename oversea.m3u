@@ -1,0 +1,33 @@
+#EXTM3U
+
+# =========================
+#   海外华人电影频道（稳定）
+# =========================
+#EXTINF:-1 tvg-name="凤凰电影" group-title="国际华语", Phoenix Movies
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/int_phoenix_movies.m3u8
+
+#EXTINF:-1 tvg-name="华语电影台" group-title="国际华语", Chinese Movie Channel
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/int_chinese_movies.m3u8
+
+#EXTINF:-1 tvg-name="TVB Anywhere Movies" group-title="国际华语", TVB Anywhere 电影时段
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/int_tvb_anywhere_movies.m3u8
+
+#EXTINF:-1 tvg-name="Celestial Movies NA" group-title="国际华语", Celestial Movies North America
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/int_celestial_na.m3u8
+
+#EXTINF:-1 tvg-name="Phoenix Movies Europe" group-title="国际华语", Phoenix Movies Europe
+https://raw.githubusercontent.com/iptv-org/iptv/master/streams/int_phoenix_eu.m3u8
+
+
+# =========================
+#   Astro（精选）
+# =========================
+#EXTINF:-1 tvg-name="Astro 双星" group-title="国际华语", Astro Shuang Xing
+http://50.7.161.82:8278/streams/d/Shuangxing/playlist.m3u8
+
+
+# =========================
+#   CATCHPLAY（精选）
+# =========================
+#EXTINF:-1 tvg-name="CATCHPLAY Movies" group-title="国际华语", CATCHPLAY 电影台
+https://d3j7ofexbkpjkf.cloudfront.net/CH_CATCHPLAY/index.m3u8
