@@ -1,4 +1,80 @@
 # update.py
+import os
+import requests
+import time
+
+# 响应时间阈值（毫秒）
+THRESHOLD = 2000   # 你选择的 2 秒
+
+# 购物台关键词
+BLOCK = ["购物", "購物", "Shop", "Shopping", "Mall", "家购", "momo", "东森购物"]
+
+def is_valid_url(url):
+    return url.startswith("http://") or url.startswith("https://")
+
+def test_stream(url):
+    """测试直播源是否可用 + 响应时间"""
+    try:
+        start = time.time()
+        r = requests.get(url, timeout=3, stream=True)
+        delay = int((time.time() - start) * 1000)
+
+        if r.status_code == 200:
+            return True, delay
+        return False, delay
+    except:
+        return False, 9999
+
+def clean_and_test(content):
+    """清洗 + 测速 + 过滤"""
+    lines = content.splitlines()
+    result = []
+    skip = False
+    url = ""
+
+    for line in lines:
+        if line.startswith("#EXTINF"):
+            skip = any(b in line for b in BLOCK)
+            info = line
+
+        elif is_valid_url(line):
+            url = line
+
+            if skip:
+                continue
+
+            ok, delay = test_stream(url)
+
+            if ok and delay <= THRESHOLD:
+                result.append(info)
+                result.append(url)
+
+    return "\n".join(result)
+
+def process_file(filename):
+    print(f"🔍 正在处理：{filename}")
+
+    with open(filename, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    cleaned = clean_and_test(content)
+
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write("#EXTM3U\n" + cleaned)
+
+    print(f"✅ 完成：{filename}\n")
+
+def main():
+    print("🚀 自动检测所有直播源（失效 + 慢源）...\n")
+
+    for filename in os.listdir("."):
+        if filename.endswith(".m3u"):
+            process_file(filename)
+
+    print("🎉 所有直播源已清洗完成！")
+
+if __name__ == "__main__":
+    main()# update.py
 
 import requests
 
