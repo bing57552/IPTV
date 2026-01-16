@@ -1,4 +1,39 @@
+import os
 import requests
+
+# 你要抓取直播源的基础地址（你只需要改这里）
+BASE_URL = "https://example.com/"   # 例如 https://iptv-source.com/
+
+def fetch_source(url):
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return response.text
+    except Exception as e:
+        print(f"❌ 抓取失败: {url} → {e}")
+        return None
+
+def main():
+    print("🚀 自动扫描所有 .m3u 文件并更新...\n")
+
+    # 自动扫描仓库目录下所有 .m3u 文件
+    for filename in os.listdir("."):
+        if filename.endswith(".m3u"):
+            source_url = BASE_URL + filename
+            print(f"🔄 正在更新：{filename}")
+            content = fetch_source(source_url)
+
+            if content:
+                with open(filename, "w", encoding="utf-8") as f:
+                    f.write(content)
+                print(f"✅ 更新成功：{filename}\n")
+            else:
+                print(f"⚠️ 跳过：{filename}（抓取失败）\n")
+
+    print("🎉 所有直播源更新完成。")
+
+if __name__ == "__main__":
+    main()import requests
 
 def fetch(url):
     try:
