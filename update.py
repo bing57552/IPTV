@@ -1,227 +1,79 @@
-# update.py
 import os
 import requests
 import time
 
-# 响应时间阈值（毫秒）
-THRESHOLD = 2000   # 你选择的 2 秒
+# 过滤购物台关键词
+BLOCK_KEYWORDS = ["购物", "shop", "momo", "东森购物", "年代购物", "tvbs欢乐购物"]
 
-# 购物台关键词
-BLOCK = ["购物", "購物", "Shop", "Shopping", "Mall", "家购", "momo", "东森购物"]
+# 响应时间阈值（秒）
+MAX_DELAY = 2
 
-def is_valid_url(url):
-    return url.startswith("http://") or url.startswith("https://")
+# 超时时间（秒）
+TIMEOUT = 3
 
-def test_stream(url):
-    """测试直播源是否可用 + 响应时间"""
+def is_shopping_channel(line):
+    return any(keyword.lower() in line.lower() for keyword in BLOCK_KEYWORDS)
+
+def test_url(url):
+    """测试直播源是否可用 + 测速"""
     try:
         start = time.time()
-        r = requests.get(url, timeout=3, stream=True)
-        delay = int((time.time() - start) * 1000)
-
-        if r.status_code == 200:
-            return True, delay
-        return False, delay
+        r = requests.get(url, timeout=TIMEOUT)
+        delay = time.time() - start
+        if r.status_code == 200 and delay < MAX_DELAY:
+            return True
     except:
-        return False, 9999
+        pass
+    return False
 
-def clean_and_test(content):
-    """清洗 + 测速 + 过滤"""
-    lines = content.splitlines()
-    result = []
-    skip = False
-    url = ""
+def clean_m3u_file(filepath):
+    print(f"清理文件：{filepath}")
+
+    new_lines = []
+    urls_seen = set()
+    current_title = ""
+
+    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+        lines = f.readlines()
 
     for line in lines:
-        if line.startswith("#EXTINF"):
-            skip = any(b in line for b in BLOCK)
-            info = line
+        line = line.strip()
 
-        elif is_valid_url(line):
+        # 处理频道名称
+        if line.startswith("#EXTINF"):
+            if is_shopping_channel(line):
+                continue
+            current_title = line
+            continue
+
+        # 处理 URL
+        if line.startswith("http"):
             url = line
 
-            if skip:
+            # 去重
+            if url in urls_seen:
                 continue
+            urls_seen.add(url)
 
-            ok, delay = test_stream(url)
+            # 测试可用性
+            if test_url(url):
+                new_lines.append(current_title + "\n")
+                new_lines.append(url + "\n")
 
-            if ok and delay <= THRESHOLD:
-                result.append(info)
-                result.append(url)
+    # 写回文件
+    with open(filepath, "w", encoding="utf-8") as f:
+        f.writelines(new_lines)
 
-    return "\n".join(result)
-
-def process_file(filename):
-    print(f"🔍 正在处理：{filename}")
-
-    with open(filename, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    cleaned = clean_and_test(content)
-
-    with open(filename, "w", encoding="utf-8") as f:
-        f.write("#EXTM3U\n" + cleaned)
-
-    print(f"✅ 完成：{filename}\n")
+    print(f"完成：{filepath}（保留 {len(new_lines)//2} 个频道）")
 
 def main():
-    print("🚀 自动检测所有直播源（失效 + 慢源）...\n")
+    print("开始清理所有 m3u 文件...\n")
 
     for filename in os.listdir("."):
         if filename.endswith(".m3u"):
-            process_file(filename)
+            clean_m3u_file(filename)
 
-    print("🎉 所有直播源已清洗完成！")
-
-if __name__ == "__main__":
-    main()# update.py
-
-import requests
-
-def fetch(url):
-    try:
-        return requests.get(url, timeout=10).text
-    except:
-        return ""
-
-# 港澳台公开源（iptv-org）
-HK = "https://iptv-org.github.io/iptv/regions/hk.m3u"
-TW = "https://iptv-org.github.io/iptv/regions/tw.m3u"
-MO = "https://iptv-org.github.io/iptv/regions/mo.m3u"
-
-# 电影台（含 CATCHPLAY）
-MOVIE = "https://iptv-org.github.io/iptv/categories/movies.m3u"
-
-# 你的自定义频道（Astro + CATCHPLAY）
-CUSTOM = """
-#EXTINF:-1 tvg-name="Astro AOD 311" group-title="Astro", Astro AOD 311
-http://50.7.161.82:8278/streams/d/AstroAOD/playlist.m3u8
-
-#EXTINF:-1 tvg-name="Astro 双星" group-title="Astro", Astro Shuang Xing
-http://50.7.161.82:8278/streams/d/Shuangxing/playlist.m3u8
-
-#EXTINF:-1 tvg-name="CATCHPLAY Movies" group-title="电影", CATCHPLAY 电影台
-https://d3j7ofexbkpjkf.cloudfront.net/CH_CATCHPLAY/index.m3u8
-"""
-
-# 去除购物台关键词
-BLOCK = ["购物", "購物", "Shop", "Mall", "家购", "momo", "东森购物"]
-
-def clean(content):
-    lines = content.splitlines()
-    cleaned = []
-    skip = False
-
-    for line in lines:
-        if line.startswith("#EXTINF"):
-            skip = any(b in line for b in BLOCK)
-        if not skip:
-            cleaned.append(line)
-
-    return "\n".join(cleaned)
-
-def main():
-    print("开始更新 live.m3u ...")
-
-    # 抓取公开源
-    hk = fetch(HK)
-    tw = fetch(TW)
-    mo = fetch(MO)
-    movie = fetch(MOVIE)
-
-    # 合并所有源
-    merged = "#EXTM3U\n"
-    merged += clean(hk) + "\n"
-    merged += clean(tw) + "\n"
-    merged += clean(mo) + "\n"
-    merged += clean(movie) + "\n"
-    merged += CUSTOM
-
-    # 写入文件
-    with open("live.m3u", "w", encoding="utf-8") as f:
-        f.write(merged)
-
-    print("更新完成！")
-
-if __name__ == "__main__":
-    main()import os
-import requests
-
-# 你要抓取直播源的基础地址（你只需要改这里）
-BASE_URL = "https://example.com/"   # 例如 https://iptv-source.com/
-
-def fetch_source(url):
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        return response.text
-    except Exception as e:
-        print(f"❌ 抓取失败: {url} → {e}")
-        return None
-
-def main():
-    print("🚀 自动扫描所有 .m3u 文件并更新...\n")
-
-    # 自动扫描仓库目录下所有 .m3u 文件
-    for filename in os.listdir("."):
-        if filename.endswith(".m3u"):
-            source_url = BASE_URL + filename
-            print(f"🔄 正在更新：{filename}")
-            content = fetch_source(source_url)
-
-            if content:
-                with open(filename, "w", encoding="utf-8") as f:
-                    f.write(content)
-                print(f"✅ 更新成功：{filename}\n")
-            else:
-                print(f"⚠️ 跳过：{filename}（抓取失败）\n")
-
-    print("🎉 所有直播源更新完成。")
-
-if __name__ == "__main__":
-    main()import requests
-
-def fetch(url):
-    try:
-        return requests.get(url, timeout=10).text
-    except:
-        return ""
-
-# 公开源（iptv-org）
-TW_MOVIE = "https://iptv-org.github.io/iptv/languages/zho.m3u"
-
-# 你的自定义频道（Astro + CATCHPLAY）
-CUSTOM = """
-#EXTINF:-1 tvg-name="Astro AOD 311" group-title="Astro", Astro AOD 311
-http://50.7.161.82:8278/streams/d/AstroAOD/playlist.m3u8
-#EXTINF:-1 tvg-name="Astro 双星" group-title="Astro", Astro Shuang Xing
-http://50.7.161.82:8278/streams/d/Shuangxing/playlist.m3u8
-#EXTINF:-1 tvg-name="CATCHPLAY Movies" group-title="电影", CATCHPLAY 电影台
-https://d3j7ofexbkpjkf.cloudfront.net/CH_CATCHPLAY/index.m3u8
-"""
-
-# 去除购物台关键词
-BLOCK = ["购物", "購物", "Shop", "Shopping", "Mall", "家购", "momo", "东森购物"]
-
-def remove_shopping(lines):
-    return "\n".join([l for l in lines.split("\n") if not any(b in l for b in BLOCK)])
-
-def save(name, content):
-    with open(name, "w", encoding="utf-8") as f:
-        f.write("#EXTM3U\n" + content)
-
-def main():
-    tw = fetch(TW_MOVIE)
-    merged = tw + "\n" + CUSTOM
-
-    clean = remove_shopping(merged)
-
-    save("live.m3u", clean)
-    save("movie.m3u", clean)
-    save("hk.m3u", clean)
-    save("tw.m3u", clean)
-    save("oversea.m3u", clean)
-    save("no-shopping.m3u", clean)
+    print("\n全部完成！")
 
 if __name__ == "__main__":
     main()
