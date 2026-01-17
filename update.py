@@ -88,9 +88,12 @@ def build_dynamic_cn_vod(all_channels_with_speed):
 
     # 4. 输出 m3u
     lines = ["#EXTM3U\n"]
-    for item in best:
-        lines.append(f'#EXTINF:-1,{item["title"]}\n')
-        lines.append(item["url"] + "\n")
+    lines = ["#EXTM3U\n"]
+for idx, item in enumerate(best, start=1):
+    number = f"{idx:03d}"  # 生成 001、002、003...
+    title = f"{number} {item['title']}"
+    lines.append(f'#EXTINF:-1,{title}\n')
+    lines.append(item["url"] + "\n")
 
     return lines
 
