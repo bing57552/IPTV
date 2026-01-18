@@ -100,7 +100,120 @@ for idx, item in enumerate(best, start=1):
 # -------------------------------
 # 主流程：扫描 → 收集 → 测速 → 动态生成
 # -------------------------------
+def generate_readme_and_html(total_channels,
+                             movie_count,
+                             drama_count,
+                             hk_count,
+                             tw_count,
+                             oversea_count,
+                             no_shopping_count):
+    """自动生成 README.md 和 HTML 入口页（带二维码链接）"""
 
+    repo_raw_base = "https://raw.githubusercontent.com/bing57552/IPTV/main"
+
+    master_url = f"{repo_raw_base}/master.m3u"
+    live_url = f"{repo_raw_base}/live.m3u"
+    movie_url = f"{repo_raw_base}/movie.m3u"
+    drama_url = f"{repo_raw_base}/drama.m3u"
+    cn_vod_url = f"{repo_raw_base}/cn_vod_live.m3u"
+    hk_url = f"{repo_raw_base}/hk.m3u"
+    tw_url = f"{repo_raw_base}/tw.m3u"
+    oversea_url = f"{repo_raw_base}/oversea.m3u"
+    no_shopping_url = f"{repo_raw_base}/no-shopping.m3u"
+
+    from datetime import datetime
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def qr_link(url):
+        return f"https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={url}"
+
+    readme_lines = [
+        "# IPTV 自动聚合系统\n\n",
+        f"- 更新时间：`{now_str}`\n",
+        f"- 频道总数：**{total_channels}**\n",
+        f"- 电影频道：**{movie_count}**\n",
+        f"- 电视剧频道：**{drama_count}**\n",
+        f"- 香港频道：**{hk_count}**\n",
+        f"- 台湾频道：**{tw_count}**\n",
+        f"- 海外频道：**{oversea_count}**\n",
+        f"- 去购物台频道：**{no_shopping_count}**\n\n",
+        "## 远程订阅链接\n\n",
+        f"- 总入口（推荐）：`{master_url}`\n",
+        f"- 综合直播：`{live_url}`\n",
+        f"- 电影频道：`{movie_url}`\n",
+        f("- 电视剧频道：`{drama_url}`\n"),
+        f("- 动态中文影视：`{cn_vod_url}`\n"),
+        f("- 香港频道：`{hk_url}`\n"),
+        f("- 台湾频道：`{tw_url}`\n"),
+        f("- 海外频道：`{oversea_url}`\n"),
+        f("- 去购物台：`{no_shopping_url}`\n\n"),
+        "## 二维码订阅入口\n\n",
+        f"### 总入口 master.m3u\n\n![master]({qr_link(master_url)})\n\n",
+        f"### 动态中文影视 cn_vod_live.m3u\n\n![cn_vod]({qr_link(cn_vod_url)})\n\n",
+        f"### 综合直播 live.m3u\n\n![live]({qr_link(live_url)})\n\n",
+    ]
+
+    with open("README.md", "w", encoding="utf-8") as f:
+        f.writelines(readme_lines)
+
+    html = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>IPTV 自动聚合入口</title>
+<style>
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#111; color:#eee; padding:20px; }}
+h1,h2,h3 {{ color:#ffd166; }}
+a {{ color:#4dabf7; }}
+.card {{ border:1px solid #333; padding:15px; margin-bottom:15px; border-radius:8px; background:#1b1b1b; }}
+.qr {{ margin-top:10px; }}
+</style>
+</head>
+<body>
+<h1>IPTV 自动聚合入口</h1>
+<p>更新时间：{now_str}</p>
+<ul>
+  <li>频道总数：{total_channels}</li>
+  <li>电影频道：{movie_count}</li>
+  <li>电视剧频道：{drama_count}</li>
+  <li>香港频道：{hk_count}</li>
+  <li>台湾频道：{tw_count}</li>
+  <li>海外频道：{oversea_count}</li>
+  <li>去购物台频道：{no_shopping_count}</li>
+</ul>
+
+<div class="card">
+  <h2>总入口（推荐）</h2>
+  <p><a href="{master_url}">{master_url}</a></p>
+  <div class="qr">
+    <img src="{qr_link(master_url)}" alt="master.m3u" />
+  </div>
+</div>
+
+<div class="card">
+  <h2>动态中文影视</h2>
+  <p><a href="{cn_vod_url}">{cn_vod_url}</a></p>
+  <div class="qr">
+    <img src="{qr_link(cn_vod_url)}" alt="cn_vod_live.m3u" />
+  </div>
+</div>
+
+<div class="card">
+  <h2>综合直播</h2>
+  <p><a href="{live_url}">{live_url}</a></p>
+  <div class="qr">
+    <img src="{qr_link(live_url)}" alt="live.m3u" />
+  </div>
+</div>
+
+</body>
+</html>
+"""
+
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print("已生成：README.md 和 index.html（含二维码链接）")
 def main():
     print("开始扫描所有 m3u 文件...\n")
 
@@ -148,7 +261,23 @@ def main():
         f.writelines(cn_vod_lines)
 
     print("已生成：cn_vod_live.m3u\n")
+total_channels = len(all_channels_with_speed)
+    movie_count = len(movie_channels)
+    drama_count = len(drama_channels)
+    hk_count = len(hk_channels)
+    tw_count = len(tw_channels)
+    oversea_count = len(oversea_channels)
+    no_shopping_count = len(no_shopping_channels)
 
+    generate_readme_and_html(
+        total_channels,
+        movie_count,
+        drama_count,
+        hk_count,
+        tw_count,
+        oversea_count,
+        no_shopping_count,
+    )
     print("全部完成！")
 
 if __name__ == "__main__":
