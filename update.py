@@ -8,9 +8,17 @@ def test_speed(url, timeout=3):
         r = requests.get(url, timeout=timeout, stream=True)
         r.close()
         end = time.time()
-        return (end - start) * 1000  # 转换为毫秒
+        return (end - start) * 1000
     except:
-        return 99999  # 超时或失败
+        return 99999
+
+# 检查直播源是否有效（返回 True/False）
+def is_valid_stream(url, timeout=3):
+    try:
+        r = requests.get(url, timeout=timeout, stream=True)
+        return r.status_code == 200
+    except:
+        return False
 # 过滤购物台关键词
 BLOCK_KEYWORDS = ["购物", "shop", "momo", "东森购物", "年代购物", "tvbs欢乐购物"]
 
