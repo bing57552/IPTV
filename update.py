@@ -296,23 +296,25 @@ if not is_valid_stream(url):
 
     print("已生成：cn_vod_live.m3u\n")
 total_channels = len(all_channels_with_speed)
-    movie_count = len(movie_channels)
-    drama_count = len(drama_channels)
-    hk_count = len(hk_channels)
-    tw_count = len(tw_channels)
-    oversea_count = len(oversea_channels)
-    no_shopping_count = len(no_shopping_channels)
 
-    generate_readme_and_html(
-        total_channels,
-        movie_count,
-        drama_count,
-        hk_count,
-        tw_count,
-        oversea_count,
-        no_shopping_count,
-    )
-    print("全部完成！")
+movie_count = len(movie_channels)
+drama_count = len(drama_channels)
+hk_count = len(hk_channels)
+tw_count = len(tw_channels)
+oversea_count = len(oversea_channels)
+no_shopping_count = len(no_shopping_channels)
+
+generate_readme_and_html(
+    total_channels,
+    movie_count,
+    drama_count,
+    hk_count,
+    tw_count,
+    oversea_count,
+    no_shopping_count,
+)
+
+print("全部完成! ")
 
 if __name__ == "__main__":
     main()
