@@ -311,7 +311,8 @@ generate_readme_and_html(
     hk_count,
     tw_count,
     oversea_count,
-    no_shopping_count,)
+    no_shopping_count,
+)
 
 print("全部完成! ")
 
