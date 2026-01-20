@@ -2,17 +2,14 @@ name: IPTV-Auto-Update
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 22 * * *'
   workflow_dispatch:
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
 
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -35,16 +32,3 @@ jobs:
           git add *.m3u README.md || true
           git commit -m "Update IPTV" -a || echo "No changes"
           git push origin main --force
-
-      - name: 配置部署环境
-        uses: actions/configure-pages@v4
-
-      - name: 上传构建产物
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-          pattern: 'all.m3u'
-
-      - name: 部署到 GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
