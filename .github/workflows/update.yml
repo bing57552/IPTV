@@ -11,6 +11,16 @@ permissions:
   pages: write
   id-token: write
 
+
+permissions:
+  contents: write    # 允许脚本将生成的 all.m3u 推送到仓库
+  pages: write       # 允许 Actions 发布文件到 GitHub Pages
+  id-token: write    # 允许安全验证部署请求
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    # ... 后面的代码保持不变 ...
 jobs:
   update:
     runs-on: ubuntu-latest
