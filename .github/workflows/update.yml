@@ -34,7 +34,7 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add *.m3u README.md || true
           git commit -m "Update IPTV" -a || echo "No changes"
-          git push origin main || git push
+          git push origin main --force
 
       - name: 配置部署环境
         uses: actions/configure-pages@v4
