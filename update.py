@@ -2,30 +2,30 @@ import requests
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-# 1. 扩充全球中文影视直播源
+# 1. 整合亚洲、欧洲、北美及影视专项源
 SOURCES = {
     "north_america": "https://raw.githubusercontent.com/YueChan/Live/main/m3u/america.m3u",
     "europe": "https://raw.githubusercontent.com/YueChan/Live/main/m3u/europe.m3u",
     "asia_chinese": "https://raw.githubusercontent.com/YueChan/Live/main/m3u/asia.m3u",
-    "sg_my": "https://raw.githubusercontent.com/YueChan/Live/main/m3u/singapore_malaysia.m3u",
-    "itv_pili": "https://itvlist.cc/itv.m3u",
-    "fanmingming": "https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv4.m3u",
-    "joevess_global": "https://raw.githubusercontent.com/joevess/IPTV/main/sources/iptv_org.m3u"
+    "southeast_asia": "https://raw.githubusercontent.com/YueChan/Live/main/m3u/singapore_malaysia.m3u",
+    "itv_movie_special": "https://itvlist.cc/itv.m3u",
+    "global_chinese": "https://iptv-org.github.io/iptv/languages/zho.m3u",
+    "live_hd": "https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv4.m3u"
 }
 
-# 2. 关键词过滤（确保获取电影和电视剧）
-KEYWORDS = ["电影", "电视剧", "剧场", "影院", "TVB", "翡翠", "星河", "华丽", "Channel 8", "U频道", "Drama", "Movie", "中文", "华语"]
+# 2. 电影与电视剧关键词过滤清单
+KEYWORDS = ["电影", "电视剧", "剧场", "影院", "TVB", "翡翠", "星河", "华丽", "Drama", "Movie", "中文", "华语", "Channel 8", "U频道"]
 
 def check_url(item):
     name_info, url = item
-    # 模拟浏览器请求头，提高音画同步成功率
+    # 模拟真实浏览器请求头，减少断流与同步问题
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     }
     try:
         start_time = time.time()
-        # 针对全球源，将超时放宽到 2.5s，确保海外源不被误杀
-        response = requests.head(url, headers=headers, timeout=2.5, allow_redirects=True)
+        # 将超时放宽至 2.0s 以适配海外物理延迟
+        response = requests.head(url, headers=headers, timeout=2.0, allow_redirects=True)
         end_time = time.time()
         
         if response.status_code == 200:
@@ -39,7 +39,7 @@ def main():
     
     for filename, url in SOURCES.items():
         try:
-            print(f"🌐 正在同步全球影视资源: {filename}")
+            print(f"🌐 正在同步: {filename}")
             r = requests.get(url, timeout=15)
             r.raise_for_status()
             lines = r.text.split('\n')
@@ -50,18 +50,17 @@ def main():
                     name_info = lines[i].strip()
                     link = lines[i+1].strip()
                     
-                    # 仅保留 IPv4/IPv6 有效链接
                     if link.startswith('http'):
-                        # 关键词过滤逻辑
                         clean_name = name_info.split(',')[-1].strip()
+                        # 仅保留符合电影、电视剧及中文关键词的频道
                         if any(kw.lower() in clean_name.lower() for kw in KEYWORDS):
                             temp_list.append((name_info, link))
 
-            # 并发测速
+            # 并发检测
             with ThreadPoolExecutor(max_workers=30) as executor:
                 results = list(executor.map(check_url, temp_list))
 
-            # 智能去重：保留同名频道中速度最快的
+            # 去重：同名频道保留速度最快的
             for res in results:
                 if res:
                     c_name = res["name"].split(',')[-1].strip()
@@ -72,7 +71,7 @@ def main():
         except Exception as e:
             print(f"❌ {filename} 失败: {e}")
 
-    # 生成最终 all.m3u
+    # 生成最终文件
     final_list = []
     for res in unique_channels.values():
         final_list.append(f"{res['name']}\n{res['url']}")
@@ -80,7 +79,8 @@ def main():
     with open("all.m3u", "w", encoding="utf-8") as f:
         f.write("#EXTM3U\n" + "\n".join(final_list))
     
-    print(f"\n🚀 全球全覆盖影视列表已生成！当前稳定频道总数: {len(final_list)}")
+    print(f"\n🚀 处理完成！已生成全覆盖列表。当前稳定频道总数: {len(final_list)}")
 
 if __name__ == "__main__":
     main()
+
