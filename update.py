@@ -1,73 +1,76 @@
-# update.py
-import os
-import re
+import glob, re, qrcode, datetime
 
-OUT_FILE = "all.m3u"
+def parse_m3u(file):
+    entries = []
+    with open(file, "r", encoding="utf-8") as f:
+        lines = f.readlines()
 
-# ===== 频道名统一 =====
-def normalize_name(name: str) -> str:
-    return (
-        name.replace("HD", "")
-            .replace("高清", "")
-            .replace("标清", "")
-            .replace("频道", "")
-            .replace(" ", "")
-            .strip()
-    )
+    for i in range(len(lines)):
+        if lines[i].startswith("#EXTINF"):
+            info = lines[i].strip()
+            url = lines[i+1].strip() if i+1 < len(lines) else ""
+            entries.append((info, url))
+    return entries
 
-# ===== 购物 / 广告 过滤规则 =====
-BLOCK_PATTERNS = [
-    r"购物", r"购", r"Shopping", r"SHOP",
-    r"广告", r"AD$", r"Promo",
-    r"导购", r"特卖", r"优选",
-    r"购物指南", r"电视购物"
-]
+# 合并
+all_entries = []
+seen = set()
 
-def is_blocked(name: str) -> bool:
-    for p in BLOCK_PATTERNS:
-        if re.search(p, name, re.IGNORECASE):
-            return True
-    return False
+for file in glob.glob("sources/*.m3u"):
+    for info, url in parse_m3u(file):
+        key = (info, url)
+        if key not in seen:
+            seen.add(key)
+            all_entries.append((info, url))
 
-channels = {}  # {频道名: set(url)}
+# 输出 all.m3u
+with open("all.m3u", "w", encoding="utf-8") as f:
+    f.write("#EXTM3U\n")
+    for info, url in all_entries:
+        f.write(info + "\n")
+        f.write(url + "\n")
 
-# ===== 扫描所有 m3u =====
-for root, _, files in os.walk("."):
-    for file in files:
-        if not file.endswith(".m3u"):
-            continue
-        if file == OUT_FILE:
-            continue
+# 统计
+groups = {}
+for info, _ in all_entries:
+    m = re.search(r'group-title="([^"]+)"', info)
+    if m:
+        g = m.group(1)
+        groups[g] = groups.get(g, 0) + 1
 
-        path = os.path.join(root, file)
-        with open(path, encoding="utf-8", errors="ignore") as f:
-            lines = f.read().splitlines()
+# 生成 README.md
+now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 
-        current = None
-        for line in lines:
-            line = line.strip()
+with open("README.md", "w", encoding="utf-8") as f:
+    f.write("# 📺 Auto IPTV Playlist\n")
+    f.write(f"**Last update:** {now}\n\n")
+    f.write(f"**Total channels:** {len(all_entries)}\n\n")
+    f.write("## 📌 Group Statistics\n")
+    for g, c in groups.items():
+        f.write(f"- **{g}**: {c}\n")
 
-            if line.startswith("#EXTINF"):
-                name = line.split(",")[-1]
-                name = normalize_name(name)
+    f.write("\n## 🔗 Playlist URL\n")
+    f.write("```\n")
+    f.write("https://raw.githubusercontent.com/USERNAME/REPO/main/all.m3u\n")
+    f.write("```\n")
 
-                # 🚫 过滤广告 / 购物
-                if is_blocked(name):
-                    current = None
-                    continue
+# 生成 HTML 入口页
+html = """
+<html>
+<head><meta charset="utf-8"><title>IPTV Playlist</title></head>
+<body>
+<h2>IPTV Playlist</h2>
+<p>Click to download:</p>
+<a href="all.m3u">Download all.m3u</a>
+</body>
+</html>
+"""
 
-                current = name
-                channels.setdefault(current, set())
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html)
 
-            elif line.startswith("http") and current:
-                channels[current].add(line)
+# 生成二维码
+img = qrcode.make("https://raw.githubusercontent.com/USERNAME/REPO/main/all.m3u")
+img.save("qrcode.png")
 
-# ===== 输出 all.m3u =====
-with open(OUT_FILE, "w", encoding="utf-8") as out:
-    out.write("#EXTM3U\n")
-    for name in sorted(channels):
-        for url in sorted(channels[name]):
-            out.write(f"#EXTINF:-1,{name}\n")
-            out.write(f"{url}\n")
-
-print(f"完成：保留 {len(channels)} 个频道（已去广告/购物）")
+print("更新完成，共输出频道：", len(all_entries))
