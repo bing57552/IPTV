@@ -28,27 +28,27 @@ NAME_MAP = {
 }
 
 # ================= 工具函数 =================
-def normalize_name(name: str) -> str:
-    name = name.strip()
-    name = re.sub(r"(HD|高清|1080P|4K)", "", name, flags=re.I)
-    name = name.replace("(", "").replace(")", "")
-    name = NAME_MAP.get(name, name)
+def normalize_name(name):
+    # 统一大小写
+    name = name.upper()
+
+    # 去掉括号及括号内内容
+    name = re.sub(r"[（(【\[].*?[】\])）]", "", name)
+
+    # 去常见无关词（统一规则，不针对具体频道）
+    name = re.sub(
+        r"(HD|高清|超清|4K|1080P|720P|蓝光|备用|测试|线路|源)",
+        "",
+        name
+    )
+
+    # CCTV 编号统一
+    name = re.sub(r"CCTV[\s\-]*0*(\d+)", r"CCTV\1", name)
+
+    # 删除所有非中文、字母、数字
+    name = re.sub(r"[^\u4e00-\u9fa5A-Z0-9]", "", name)
+
     return name.strip()
-
-def blocked(name: str) -> bool:
-    return any(k.lower() in name.lower() for k in BLOCK_KEYWORDS)
-
-def test_speed(url: str):
-    try:
-        start = time.time()
-        r = requests.get(url, timeout=TIMEOUT, stream=True)
-        r.raise_for_status()
-        for _ in r.iter_content(chunk_size=8192):
-            break
-        r.close()
-        return time.time() - start
-    except:
-        return None
 
 # ================= 读取所有 m3u =================
 channels = {}  # {频道名: set(urls)}
