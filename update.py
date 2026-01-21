@@ -67,7 +67,7 @@ def main():
             final_output.append(f"#EXTINF:-1, {display_name}\n{res['url']}")
             added_channels.add(raw_name)
 
-    if len(added_channels) > 5:
+    if len(added_channels) > 0:
         with open("all.m3u", "w", encoding="utf-8") as f:
             f.write("\n".join(final_output))
         print(f"✅ 更新完成！共保留 {len(added_channels)} 个唯一高清频道。")
