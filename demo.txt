@@ -1,0 +1,15 @@
+香港卫视,http://zhibo.hkstv.tv/livestream/mutfysrq.flv
+环球电视,http://zb.xzxwhcb.com:9999/hls/world.m3u8
+阳光卫视,https://stream.chinasuntv.com/680k/mid_video_index.m3u8
+龙祥电影台,https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tw_ls_movies.m3u8
+纬来电影台,https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tw_videoland_movies.m3u8
+东森电影台,https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tw_ettv_movies.m3u8
+卫视电影台,https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tw_star_chinese_movies.m3u8
+CCTV-6 电影频道,http://live.zbds.top/cctv/cctv6.m3u8
+1905 电影频道,http://live.zbds.top/cctv/1905.m3u8
+Celestial Movies,https://raw.githubusercontent.com/iptv-org/iptv/master/streams/my_celestial_movies.m3u8
+Celestial Classic Movies,https://raw.githubusercontent.com/iptv-org/iptv/master/streams/my_celestial_classic.m3u8
+Astro AOD 311,http://50.7.161.82:8278/streams/d/AstroAOD/playlist.m3u8
+Astro Shuang Xing,http://50.7.161.82:8278/streams/d/Shuangxing/playlist.m3u8
+Astro Quan Jia,http://50.7.161.82:8278/streams/d/Quanjia/playlist.m3u8
+CATCHPLAY 电影台,https://d3j7ofexbkpjkf.cloudfront.net/CH_CATCHPLAY/index.m3u8
