@@ -1,11 +1,13 @@
 import os
+import requests
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
 def get_channel_logic(name, url):
-    """频道分类逻辑（不变）"""
+    """频道分类逻辑（保持不变）"""
     n = str(name).upper().replace(" ", "")
-    u = str(url).lower()
-
+    
     # 电影频道
     premium_movie = [
         "ASTRO", "CHC", "CATCHPLAY", "POPC", "美亚", "美亞", "DISNEY", "NETFLIX",
@@ -32,77 +34,80 @@ def get_channel_logic(name, url):
 
     return "综合频道", False
 
-def get_quality_tag(url):
-    """根据URL判断清晰度标签"""
+def get_quality_priority(url):
+    """根据URL获取清晰度优先级"""
     u = str(url).lower()
     if any(x in u for x in ['4k', 'uhd', '2160']):
-        return "[4K]"
+        return 4, "[4K]"
     elif any(x in u for x in ['1080', 'fhd']):
-        return "[1080P]"
+        return 3, "[1080P]"
     elif any(x in u for x in ['720', 'hd']):
-        return "[高清]"
+        return 2, "[高清]"
     else:
-        return "[标清]"
+        return 1, "[标清]"
+
+def check_stream_valid(url):
+    """快速检测直播源是否有效（5秒超时）"""
+    try:
+        # HEAD请求更快，只检查响应头
+        response = requests.head(url, timeout=5, allow_redirects=True)
+        return response.status_code in [200, 206]
+    except:
+        # 尝试GET请求（直播流可能不支持HEAD）
+        try:
+            response = requests.get(url, timeout=5, stream=True)
+            return response.status_code in [200, 206]
+        except:
+            return False
 
 def main():
     input_file = "demo.txt"
     if not os.path.exists(input_file):
+        print("demo.txt not found!")
         return
 
-    # 按频道名分组，保留所有源
+    # 按频道分组
     channels = defaultdict(list)
     
+    print("正在读取频道列表...")
     with open(input_file, "r", encoding="utf-8") as f:
-        for line in f:
+        for line_num, line in enumerate(f, 1):
             if "," in line and "://" in line:
                 try:
                     name, url = line.strip().split(",", 1)
                     group, is_shop = get_channel_logic(name, url)
-                    quality_tag = get_quality_tag(url)
                     
-                    # 保存：频道基础名、分组、是否购物、清晰度标签、URL
                     channels[name].append({
+                        'url': url.strip(),
                         'group': group,
                         'is_shop': is_shop,
-                        'quality': quality_tag,
-                        'url': url
+                        'line_num': line_num
                     })
                 except:
                     continue
 
+    print(f"发现 {len(channels)} 个频道，共 {sum(len(s) for s in channels.values())} 个源")
+
     all_res = []
     clean_res = []
-
-    # 按频道处理，每个频道输出多条源（按清晰度排序）
-    for channel_name, sources in channels.items():
-        group = sources[0]['group']  # 取第一个的分组（同名频道分组一致）
-        is_shop = sources[0]['is_shop']
-        
-        # 按清晰度优先级排序：4K > 1080P > 高清 > 标清
-        quality_order = {"[4K]": 4, "[1080P]": 3, "[高清]": 2, "[标清]": 1}
-        sorted_sources = sorted(sources, key=lambda x: quality_order.get(x['quality'], 0), reverse=True)
-        
-        # 生成多条 #EXTINF（同名频道 + 不同清晰度）
-        for source in sorted_sources:
-            display_name = f"{channel_name} {source['quality']}"
-            entry = f'#EXTINF:-1 group-title="{source["group"]}",{display_name}
-{source["url"]}
-'
-            
-            all_res.append(entry)
-            if not source['is_shop']:
-                clean_res.append(entry)
-
-    # 输出文件
-    with open("all.m3u", "w", encoding="utf-8") as f:
-        f.write("#EXTM3U
-" + "".join(all_res))
     
-    with open("no-shopping.m3u", "w", encoding="utf-8") as f:
-        f.write("#EXTM3U
-" + "".join(clean_res))
+    # 并行检测所有直播源
+    print("正在检测直播源有效性...")
+    valid_streams = {}
+    
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        future_to_url = {executor.submit(check_stream_valid, source['url']): source for sources in channels.values() for source in sources}
+        
+        for future in as_completed(future_to_url, timeout=60):
+            source = future_to_url[future]
+            try:
+                is_valid = future.result()
+                valid_streams[source['url']] = is_valid
+            except:
+                valid_streams[source['url']] = False
 
-if __name__ == "__main__":
-    main()
+    print(f"有效源检测完成，找到 {sum(valid_streams.values())} 个可用源")
 
-   
+    # 处理每个频道，保留有效源（优先高画质，最多3个）
+    print("正在整理频道...")
+    for channel_
