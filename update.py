@@ -1,7 +1,7 @@
 import requests
 import re
 import time
-from urllib.parse import urlparse
+import os
 from typing import List, Dict, Tuple, Optional
 import logging
 
@@ -61,7 +61,8 @@ class IPTVProcessor:
                     
                 return speed_score, True
             return 0.0, False
-        except:
+        except Exception as e:
+            logger.warning(f"测试链接 {url} 失败: {str(e)}")
             return 0.0, False
     
     def normalize_channel_name(self, name: str) -> str:
@@ -147,12 +148,26 @@ class IPTVProcessor:
 def main():
     processor = IPTVProcessor()
     
-    try:
-        with open('input.m3u', 'r', encoding='utf-8') as f:
-            content = f.read()
-    except FileNotFoundError:
-        url = input("请输入M3U源URL: ")
-        content = requests.get(url).text
+    # 优先从环境变量获取M3U源URL（CI环境用）
+    m3u_url = os.getenv('M3U_SOURCE_URL')
+    
+    if m3u_url:
+        logger.info(f"从环境变量获取M3U源: {m3u_url}")
+        try:
+            response = requests.get(m3u_url, timeout=15)
+            response.raise_for_status()
+            content = response.text
+        except Exception as e:
+            logger.error(f"获取M3U源失败: {str(e)}")
+            raise
+    else:
+        # 本地运行时，尝试读取文件或交互式输入
+        try:
+            with open('input.m3u', 'r', encoding='utf-8') as f:
+                content = f.read()
+        except FileNotFoundError:
+            url = input("请输入M3U源URL: ")
+            content = requests.get(url).text
     
     result = processor.process_sources(content)
     
