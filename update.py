@@ -5,6 +5,7 @@ import os
 from typing import List, Dict, Tuple, Optional
 import logging
 
+# 日志配置
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,6 @@ class IPTVProcessor:
     def extract_channel_info(self, m3u_line: str) -> Optional[Dict]:
         if not m3u_line.startswith('#EXTINF'):
             return None
-            
         channel_name = None
         group_title = None
         quality = '标清'
@@ -28,16 +28,13 @@ class IPTVProcessor:
         name_match = re.search(r',([^,]+)$', m3u_line)
         if name_match:
             channel_name = name_match.group(1).strip()
-            
         group_match = re.search(r'group-title="([^"]*)"', m3u_line, re.IGNORECASE)
         if group_match:
             group_title = group_match.group(1).strip()
-            
         for q in self.quality_priority.keys():
-            if q.lower() in channel_name.lower() or q.lower() in m3u_line.lower():
+            if q.lower() in (channel_name.lower() if channel_name else '') or q.lower() in m3u_line.lower():
                 quality = q
                 break
-                
         return {
             'name': channel_name,
             'group': group_title,
@@ -45,24 +42,21 @@ class IPTVProcessor:
             'priority': self.quality_priority.get(quality.lower(), 1)
         }
     
-    def test_stream_quality(self, url: str, timeout: int = 10) -> Tuple[float, bool]:
+    def test_stream_quality(self, url: str, timeout: int = 8) -> Tuple[float, bool]:
         try:
             start_time = time.time()
-            response = requests.head(url, timeout=timeout, allow_redirects=True)
-            
+            response = requests.head(url, timeout=timeout, allow_redirects=True, verify=False)
             if response.status_code == 200:
                 speed_score = 1.0 / (time.time() - start_time + 0.1)
                 content_type = response.headers.get('content-type', '').lower()
-                
                 if 'm3u8' in content_type or url.endswith('.m3u8'):
                     speed_score *= 1.2
                 elif 'video' in content_type or url.endswith('.ts'):
                     speed_score *= 1.1
-                    
                 return speed_score, True
             return 0.0, False
         except Exception as e:
-            logger.warning(f"测试链接 {url} 失败: {str(e)}")
+            logger.warning(f"链接测试失败 {url[:30]}: {str(e)[:20]}")
             return 0.0, False
     
     def normalize_channel_name(self, name: str) -> str:
@@ -80,17 +74,14 @@ class IPTVProcessor:
         
         while i < len(lines):
             line = lines[i].strip()
-            
             if line.startswith('#EXTINF'):
                 info = self.extract_channel_info(line)
                 if not info or not info.get('name'):
                     i += 1
                     continue
-                    
                 i += 1
                 if i >= len(lines):
                     break
-                    
                 url = lines[i].strip()
                 if url and not url.startswith('#'):
                     streams.append({
@@ -104,21 +95,17 @@ class IPTVProcessor:
             i += 1
             
         logger.info(f"发现 {len(streams)} 个直播源")
-        
         channel_groups = {}
         for stream in streams:
             norm_name = stream['normalized_name']
             if norm_name not in channel_groups:
                 channel_groups[norm_name] = []
             channel_groups[norm_name].append(stream)
-            
         logger.info(f"分组完成，共 {len(channel_groups)} 个频道")
         
         result_lines = ['#EXTM3U', '#EXT-X-VERSION:3']
-        
         for norm_name, sources in channel_groups.items():
             logger.info(f"处理频道: {norm_name} ({len(sources)}个源)")
-            
             for source in sources:
                 speed_score, available = self.test_stream_quality(source['url'])
                 source['speed_score'] = speed_score
@@ -128,13 +115,11 @@ class IPTVProcessor:
                     speed_score * 30 +
                     (1 if available else 0) * 10
                 )
-                
             best_sources = sorted(
                 [s for s in sources if s['available']],
                 key=lambda x: x['total_score'],
                 reverse=True
             )
-            
             if best_sources:
                 best_source = best_sources[0]
                 extinf = f'#EXTINF:-1 tvg-name="{best_source["name"]}" group-title="{best_source["group"]}"'
@@ -147,27 +132,19 @@ class IPTVProcessor:
 
 def main():
     processor = IPTVProcessor()
-    
-    # 优先从环境变量获取M3U源URL（CI环境用）
     m3u_url = os.getenv('M3U_SOURCE_URL')
     
-    if m3u_url:
-        logger.info(f"从环境变量获取M3U源: {m3u_url}")
-        try:
-            response = requests.get(m3u_url, timeout=15)
-            response.raise_for_status()
-            content = response.text
-        except Exception as e:
-            logger.error(f"获取M3U源失败: {str(e)}")
-            raise
-    else:
-        # 本地运行时，尝试读取文件或交互式输入
-        try:
-            with open('input.m3u', 'r', encoding='utf-8') as f:
-                content = f.read()
-        except FileNotFoundError:
-            url = input("请输入M3U源URL: ")
-            content = requests.get(url).text
+    if not m3u_url:
+        logger.error("未配置 M3U_SOURCE_URL 环境变量！")
+        return
+    
+    try:
+        response = requests.get(m3u_url, timeout=15)
+        response.raise_for_status()
+        content = response.text
+    except Exception as e:
+        logger.error(f"获取M3U源失败: {str(e)}")
+        return
     
     result = processor.process_sources(content)
     
