@@ -71,7 +71,7 @@ class IPTVProcessor:
         return name.strip()
     
     def process_sources(self, m3u_content: str, max_workers: int = 10) -> str:
-        lines = m3u_content.strip().split('\n')
+        lines = m3u_content.strip().splitines()
 # ✅ 修复 split
         streams = []
         i = 0
