@@ -66,13 +66,12 @@ class IPTVProcessor:
     
     def normalize_channel_name(self, name: str) -> str:
         name = re.sub(r'[4-9]K|1080P?|720P?|标清|SD|HD|超清|高清|d+p', '', name, flags=re.IGNORECASE)
-        name = re.sub(r'[^0-9A-Za-z一-鿿s-]', '', name)  # ✅ 修复正则
-        name = re.sub(r's+', ' ', name.strip())
+        name = re.sub(r'[^0-9A-Za-z一-鿿\s-]', '', name)
+        name = re.sub(r'\s+', ' ', name.strip())
         return name.strip()
     
     def process_sources(self, m3u_content: str, max_workers: int = 10) -> str:
-        lines = m3u_content.strip().splitines()
-# ✅ 修复 split
+        lines = m3u_content.strip().splitlines()
         streams = []
         i = 0
         
@@ -141,8 +140,7 @@ class IPTVProcessor:
                 result_lines.extend([extinf, best_source['url']])
                 logger.info(f"✓ {best_source['name']} -> {best_source['quality']} (评分: {best_source['total_score']:.1f})")
         
-        result_m3u = '
-'.join(result_lines)  # ✅ 修复 join
+        result_m3u = '\n'.join(result_lines)
         logger.info(f"处理完成！输出 {len([l for l in result_lines if l.startswith('#EXTINF')])} 个最佳频道")
         return result_m3u
 
