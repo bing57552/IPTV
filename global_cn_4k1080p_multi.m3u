@@ -1,0 +1,68 @@
+#EXTM3U x-tvg-url=""
+# 央视4K超高清【纯国语，4K@50fps，影视综艺全覆盖】
+#EXTINF:-1 tvg-name="CCTV-4K超高清" group-title="4K影视主频道",CCTV-4K超高清_主源1（移动专网）
+http://ott.mobaibox.com/PLTV/3/224/3221228165/index.m3u8
+#EXTINF:-1 tvg-name="CCTV-4K超高清" group-title="4K影视主频道",CCTV-4K超高清_备用源2（联通CDN）
+https://cdn-cctv4k.live/hls/cctv4k.m3u8
+#EXTINF:-1 tvg-name="CCTV-4K超高清" group-title="4K影视主频道",CCTV-4K超高清_备用源3（公网直连）
+http://live.cctv4k.cn/stream/4khd.m3u8
+
+# CCTV6电影频道【纯国语，1080P，院线新片/经典老片】
+#EXTINF:-1 tvg-name="CCTV6电影频道" group-title="1080P影视核心频道",CCTV6_主源1（北邮官方）
+https://ivi.bupt.edu.cn/hls/cctv6hd.m3u8
+#EXTINF:-1 tvg-name="CCTV6电影频道" group-title="1080P影视核心频道",CCTV6_备用源2（高校专网）
+http://iptv.huuc.edu.cn/hls/cctv6.m3u8
+#EXTINF:-1 tvg-name="CCTV6电影频道" group-title="1080P影视核心频道",CCTV6_备用源3（咪咕直连）
+https://live.miguvideo.com/hls/cctv6.m3u8
+#EXTINF:-1 tvg-name="CCTV6电影频道" group-title="1080P影视核心频道",CCTV6_备用源4（全国IPTV通用）
+http://223.110.241.204:6610/gitv/live1/G_CCTV6-BJ/G_CCTV6-BJ
+
+# CCTV8电视剧频道【纯国语，1080P，黄金档新剧/经典剧集】
+#EXTINF:-1 tvg-name="CCTV8电视剧频道" group-title="1080P影视核心频道",CCTV8_主源1（北邮官方）
+https://ivi.bupt.edu.cn/hls/cctv8hd.m3u8
+#EXTINF:-1 tvg-name="CCTV8电视剧频道" group-title="1080P影视核心频道",CCTV8_备用源2（高校专网）
+http://iptv.huuc.edu.cn/hls/cctv8.m3u8
+#EXTINF:-1 tvg-name="CCTV8电视剧频道" group-title="1080P影视核心频道",CCTV8_备用源3（咪咕直连）
+https://live.miguvideo.com/hls/cctv8.m3u8
+#EXTINF:-1 tvg-name="CCTV8电视剧频道" group-title="1080P影视核心频道",CCTV8_备用源4（全国IPTV通用）
+http://223.110.241.204:6610/gitv/live1/G_CCTV8-SH/G_CCTV8-SH
+
+# CCTV4中文国际【纯国语，1080P，全球华语影视剧场】
+#EXTINF:-1 tvg-name="CCTV4中文国际" group-title="1080P海外华语影视",CCTV4_主源1（IPTV通用）
+http://223.110.241.204:6610/gitv/live1/G_CCTV-4-CQ/G_CCTV-4-CQ
+#EXTINF:-1 tvg-name="CCTV4中文国际" group-title="1080P海外华语影视",CCTV4_备用源2（公网直连）
+http://live.cctv4.cn/hls/cctv4.m3u8
+#EXTINF:-1 tvg-name="CCTV4中文国际" group-title="1080P海外华语影视",CCTV4_备用源3（咪咕直连）
+https://live.miguvideo.com/hls/cctv4.m3u8
+
+# CHC高清电影【纯国语，1080P，无广告院线高清】
+#EXTINF:-1 tvg-name="CHC高清电影" group-title="1080P精品电影频道",CHC高清_主源1（北邮官方）
+https://ivi.bupt.edu.cn/hls/chchd.m3u8
+#EXTINF:-1 tvg-name="CHC高清电影" group-title="1080P精品电影频道",CHC高清_备用源2（专网直连）
+http://iptv.huuc.edu.cn/hls/chc.m3u8
+#EXTINF:-1 tvg-name="CHC高清电影" group-title="1080P精品电影频道",CHC高清_备用源3（IPTV通用）
+http://223.110.241.204:6610/gitv/live1/G_CHC-HD/G_CHC-HD
+
+# 东方影视频道【纯国语，1080P，精品国剧/经典电影】
+#EXTINF:-1 tvg-name="东方影视频道" group-title="1080P卫视影视频道",东方影视_主源1（北邮官方）
+https://ivi.bupt.edu.cn/hls/dfhd.m3u8
+#EXTINF:-1 tvg-name="东方影视频道" group-title="1080P卫视影视频道",东方影视_备用源2（上海IPTV）
+http://live.smg.cn/hls/dfys.m3u8
+#EXTINF:-1 tvg-name="东方影视频道" group-title="1080P卫视影视频道",东方影视_备用源3（公网直连）
+http://223.110.241.204:6610/gitv/live1/G_DFYS-GD/G_DFYS-GD
+
+# 中国电影频道国际版【纯国语，1080P，全球播映华语佳作】
+#EXTINF:-1 tvg-name="中国电影频道国际版" group-title="1080P海外华语影视",中影国际_主源1（官方直连）
+http://live.chinafilmchannel.cn/hls/cfci.m3u8
+#EXTINF:-1 tvg-name="中国电影频道国际版" group-title="1080P海外华语影视",中影国际_备用源2（海外CDN）
+https://cdn-cfci.live/hls/cfci_hd.m3u8
+#EXTINF:-1 tvg-name="中国电影频道国际版" group-title="1080P海外华语影视",中影国际_备用源3（IPTV通用）
+http://223.110.241.204:6610/gitv/live1/G_CFCI-BJ/G_CFCI-BJ
+
+# 凤凰卫视电影台（国语版）【纯国语，1080P，海外华语电影精选】
+#EXTINF:-1 tvg-name="凤凰卫视电影台" group-title="1080P海外华语影视",凤凰电影_主源1（香港直连）
+https://live.hkstv.hk.lxdns.com/live/hks2.m3u8
+#EXTINF:-1 tvg-name="凤凰卫视电影台" group-title="1080P海外华语影视",凤凰电影_备用源2（海外CDN）
+https://cdn-hks.live/hls/hks2_hd.m3u8
+#EXTINF:-1 tvg-name="凤凰卫视电影台" group-title="1080P海外华语影视",凤凰电影_备用源3（公网直连）
+http://223.110.241.204:6610/gitv/live1/G_FHYS-GD/G_FHYS-GD
