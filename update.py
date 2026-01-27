@@ -121,4 +121,47 @@ class IPTVProcessor:
             
             for source in sources:
                 speed_score, available = self.test_stream_quality(source['url'])
-                sour
+                source['speed_score'] = speed_score
+                source['available'] = available
+                source['total_score'] = (
+                    source['priority'] * 0.7 +
+                    speed_score * 30 +
+                    (1 if available else 0) * 10
+                )
+                
+            best_sources = sorted(
+                [s for s in sources if s['available']],
+                key=lambda x: x['total_score'],
+                reverse=True
+            )
+            
+            if best_sources:
+                best_source = best_sources[0]
+                extinf = f'#EXTINF:-1 tvg-name="{best_source["name"]}" group-title="{best_source["group"]}"'
+                result_lines.extend([extinf, best_source['url']])
+                logger.info(f"✓ {best_source['name']} -> {best_source['quality']} (评分: {best_source['total_score']:.1f})")
+        
+        result_m3u = '
+'.join(result_lines)  # ✅ 修复 join
+        logger.info(f"处理完成！输出 {len([l for l in result_lines if l.startswith('#EXTINF')])} 个最佳频道")
+        return result_m3u
+
+def main():
+    processor = IPTVProcessor()
+    
+    try:
+        with open('input.m3u', 'r', encoding='utf-8') as f:
+            content = f.read()
+    except FileNotFoundError:
+        url = input("请输入M3U源URL: ")
+        content = requests.get(url).text
+    
+    result = processor.process_sources(content)
+    
+    with open('output_best.m3u', 'w', encoding='utf-8') as f:
+        f.write(result)
+    
+    print("✅ 处理完成！最佳源已保存到 output_best.m3u")
+
+if __name__ == "__main__":
+    main()
