@@ -11,6 +11,24 @@ from collections import defaultdict
 TIMEOUT = 8
 CHECK_BYTES = 1024 * 256
 MAX_SOURCES_PER_CHANNEL = 5
+
+# =========================
+# 影视 / 剧集白名单（防误杀）
+# =========================
+DRAMA_MOVIE_WHITELIST = {
+    "cctv-6", "cctv-8",
+    "chc", "影迷", "动作电影", "家庭影院",
+    "电影", "影院", "影视", "戏剧", "剧场",
+    "tvb", "翡翠", "明珠", "j2", "星河",
+    "凤凰电影", "凤凰中文",
+    "celestial", "天映",
+    "hbo", "cinemax",
+    "viu", "now",
+    "纬来", "东森", "三立", "八大",
+    "华视", "台视", "民视",
+    "mediacorp", "channel 8", "channel u",
+    "astro"
+}
 # =====================
 # 精准过滤：购物 / 广告台
 # =====================
