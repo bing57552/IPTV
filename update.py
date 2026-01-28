@@ -3,6 +3,26 @@ import re
 import json
 import time
 import requests
+# ======================
+# 频道排序优先级（数字越小越靠前）
+CHANNEL_PRIORITY = [
+    ("CCTV", 0),
+    ("中央", 0),
+
+    ("卫视", 10),
+
+    ("凤凰", 20),
+    ("翡翠", 21),
+    ("TVB", 22),
+
+    ("台视", 30),
+    ("中视", 31),
+    ("华视", 32),
+
+    ("NHK", 40),
+    ("KBS", 41),
+    ("BBC", 42),
+]
 from collections import defaultdict
 
 # =====================
