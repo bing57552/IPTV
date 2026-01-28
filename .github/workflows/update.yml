@@ -23,7 +23,7 @@ jobs:
       - name: 安装依赖
         run: pip install requests
 
-      - name: 运行 IPTV 总聚合器
+      - name: 运行 IPTV 更新脚本
         run: python update.py
 
       # ✅ 安全校验（强烈推荐）
