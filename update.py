@@ -157,13 +157,27 @@ def main():
         scored = []
 
         for extinf, url in items:
-            alive = is_stream_alive(url)
-            health[url] = {
-                "alive": alive,
-                "last": int(time.time())
-            }
-            if alive:
-                scored.append((score_url(url), extinf, url))
+    alive = is_stream_alive(url)
+
+    h = health.get(url, {"ok": 0, "fail": 0})
+
+    if alive:
+        h["ok"] += 1
+        h["fail"] = 0
+    else:
+        h["fail"] += 1
+
+    h["alive"] = alive
+    h["last"] = int(time.time())
+    health[url] = h
+
+    if alive:
+        score = score_url(url) + h.get("ok", 0)
+        scored.append((score, extinf, url))
+    else:
+        if h.get("ok", 0) > 0 and h.get("fail", 0) <= 3:
+            score = -50 - h.get("fail", 0) * 10
+            scored.append((score, extinf, url))
 
         scored.sort(reverse=True)
 
