@@ -1,13 +1,10 @@
-import os
+# -*- coding: utf-8 -*-
 import re
-import json
-import time
 import requests
-from collections import defaultdict
 
-# =====================
-# 基础配置
-# =====================
+# =========================
+# 基础参数
+# =========================
 TIMEOUT = 8
 CHECK_BYTES = 1024 * 256
 MAX_SOURCES_PER_CHANNEL = 5
@@ -29,12 +26,14 @@ DRAMA_MOVIE_WHITELIST = {
     "mediacorp", "channel 8", "channel u",
     "astro"
 }
-# =====================
-# 精准过滤：购物 / 广告台
-# =====================
+
+# =========================
+# 购物台（直接过滤）
+# =========================
 SHOPPING_CHANNELS = {
-    "hsn", "home shopping network", "qvc us", "shophq",
-    "jewelry television", "jtv", "the shopping channel", "tsc",
+    "hsn", "home shopping network", "qvc us",
+    "shophq", "jewelry television", "jtv",
+    "the shopping channel", "tsc",
     "qvc uk", "qvc germany", "qvc italy", "qvc france",
     "hse24", "hse extra", "ideal world", "jml direct",
     "央广购物", "家有购物", "好易购", "优购物", "快乐购",
@@ -47,230 +46,104 @@ SHOPPING_CHANNELS = {
     "tvsn", "openshop"
 }
 
+# =========================
+# 广告台关键词（直接过滤）
+# =========================
 AD_CHANNEL_KEYWORDS = {
-    "advertising", "ad channel", "promo", "promotion",
-    "campaign", "marketing", "classifieds"
+    "advert", "promo", "promotion", "commercial",
+    "shopping", "shop", "sale",
+    "classified", "infomercial",
+    "广告", "推广", "促销", "购物"
 }
-SOURCE_POOL = "source_pool.txt"
-OUTPUT_FILE = "output_best.m3u"
-HEALTH_FILE = "stream_health.json"
 
-# EPG（观感提升核心）
-EPG_URL = "https://epg.112114.xyz/pp.xml"
-
-# 广告 / 购物台过滤（安全版）
-BLOCK_KEYWORDS = ["购物", "广告", "导购"]
-
-# 频道优先级（越小越靠前）
-CHANNEL_PRIORITY = [
-    ("CCTV", 0),
-    ("央视", 0),
-
-    ("卫视", 10),
-
-    ("凤凰", 20),
-    ("翡翠", 21),
-    ("明珠", 22),
-
-    ("Astro", 30),
-    ("CHC", 31),
-
-    ("TVB", 40),
-    ("myTV", 41),
-
-    ("八大", 50),
-    ("gtv", 51),
-
-    ("美亚", 60),
-    ("电影", 61),
-
-    ("Disney", 70),
-    ("Netflix", 71),
-]
-
-# =====================
+# =========================
 # 工具函数
-# =====================
-def fetch_text(url):
+# =========================
+def normalize(text: str) -> str:
+    return text.lower().strip()
+
+def is_ad_or_shopping(name: str) -> bool:
+    n = normalize(name)
+    if any(k in n for k in SHOPPING_CHANNELS):
+        return True
+    if any(k in n for k in AD_CHANNEL_KEYWORDS):
+        return True
+    return False
+
+def is_whitelisted(name: str) -> bool:
+    n = normalize(name)
+    return any(k in n for k in DRAMA_MOVIE_WHITELIST)
+
+def is_stream_alive(url: str) -> bool:
     try:
-        r = requests.get(url, timeout=TIMEOUT)
-        if r.status_code == 200 and "#EXTM3U" in r.text:
-            return r.text
-    except:
-        pass
-    return ""
-
-def is_stream_alive(url):
-    try:
-        headers = {"User-Agent": "Mozilla/5.0"}
-        r = requests.get(url, stream=True, timeout=TIMEOUT, headers=headers)
-
-        ct = r.headers.get("Content-Type", "").lower()
-        if "text/html" in ct:
-            return False
-
-        size = 0
-        start = time.time()
-        for chunk in r.iter_content(chunk_size=8192):
-            if not chunk:
-                continue
-            size += len(chunk)
-            if size >= CHECK_BYTES:
-                return True
-            if time.time() - start > 3:
-                return False
+        r = requests.get(
+            url,
+            timeout=TIMEOUT,
+            stream=True,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        return r.status_code == 200
     except:
         return False
 
-    return False
-
-def score_url(url):
-    u = url.lower()
-    score = 0
-    if "4k" in u: score += 40
-    if "2160" in u: score += 40
-    if "1080" in u: score += 25
-    if u.startswith("https"): score += 10
-    if ".m3u8" in u: score += 10
-    return score
-
-def channel_sort_key(name):
-    for k, p in CHANNEL_PRIORITY:
-        if k in name:
-            return p
-    return 999
-
-# =====================
-# M3U 解析
-# =====================
-def parse_m3u(content):
-    lines = content.splitlines()
-    res, cur = [], None
-    for l in lines:
-        if l.startswith("#EXTINF"):
-            cur = l
-        elif l and not l.startswith("#") and cur:
-            res.append((cur, l))
-            cur = None
-    return res
-
-def extract_meta(extinf):
-    name = re.search(r",(.+)", extinf)
-    tvg = re.search(r'tvg-id="([^"]*)"', extinf)
-    return name.group(1).strip(), tvg.group(1).strip() if tvg else ""
-
-# =====================
-# 源池
-# =====================
-def load_sources():
-    urls = []
-    if not os.path.exists(SOURCE_POOL):
-        return urls
-    with open(SOURCE_POOL, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                urls.append(line)
-    return list(set(urls))
-
-# =====================
-# 主逻辑
-# =====================
-def main():
-    # 1. health 读取
-    health = {}
-    if os.path.exists(HEALTH_FILE):
-        with open(HEALTH_FILE, "r", encoding="utf-8") as f:
-            health = json.load(f)
-
-    all_channels = defaultdict(list)
-    pool_urls = load_sources()
-
-    # 2. 拉取所有源
-    for src in pool_urls:
-        text = fetch_text(src)
-        if not text:
-            continue
-        for extinf, url in parse_m3u(text):
-            name, tvg = extract_meta(extinf)
-            if not name:
-                continue
-            if any(k in name for k in BLOCK_KEYWORDS):
-                continue
-            all_channels[(name, tvg)].append((extinf, url))
-
+# =========================
+# 主流程
+# =========================
+def process_m3u(lines, output_file):
     final = []
 
-for name, urls in grouped.items():
-    for u in urls:
-        extinf = ...
-        final.append((extinf, u))
+    extinf = None
+    for line in lines:
+        line = line.strip()
+        if line.startswith("#EXTINF"):
+            extinf = line
+        elif line and not line.startswith("#") and extinf:
+            name = extinf.split(",")[-1]
 
-# ✅ 就在这里：排序 / 编号 / LOGO
-sorted_final = []
-channel_index = 1
+            # 🚫 广告 / 购物台过滤（影视白名单放行）
+            if is_ad_or_shopping(name) and not is_whitelisted(name):
+                extinf = None
+                continue
 
-for extinf, u in final:
-    if 'tvg-chno' not in extinf:
+            final.append((extinf, line))
+            extinf = None
+
+    # =========================
+    # ✅ 排序 / 编号 / LOGO（核心区）
+    # =========================
+    sorted_final = []
+    channel_index = 1
+
+    for extinf, u in final:
+        # 清理旧字段
+        extinf = re.sub(r'tvg-chno="[^"]*"', '', extinf)
+        extinf = re.sub(r'tvg-logo="[^"]*"', '', extinf)
+
+        # 添加编号（LOGO 以后在这加）
         extinf = extinf.replace(
-            '#EXTINF:',
+            "#EXTINF:",
             f'#EXTINF:-1 tvg-chno="{channel_index}" '
         )
-    sorted_final.append((extinf, u))
-    channel_index += 1
 
-final = sorted_final
+        sorted_final.append((extinf.strip(), u))
+        channel_index += 1
 
-# ✅ 然后才写文件
-with open(output_file, "w", encoding="utf-8") as f:
-    for extinf, u in final:
-        f.write(extinf + "\n")
-        f.write(u + "\n")
-
-    # 3. 探测 + 评分
-    for (name, tvg), items in all_channels.items():
-        scored = []
-        for extinf, url in items:
-            alive = is_stream_alive(url)
-            health[url] = {
-                "alive": alive,
-                "last": int(time.time())
-            }
-            if alive:
-                scored.append((score_url(url), extinf, url))
-
-        scored.sort(reverse=True)
-
-        # 保底：避免频道消失
-        if not scored:
-            for extinf, url in items:
-                if health.get(url, {}).get("alive"):
-                    final.append((extinf, url))
-                    break
-            continue
-
-        for s in scored[:MAX_SOURCES_PER_CHANNEL]:
-            final.append((s[1], s[2]))
-
-    # 4. 排序
-    final.sort(key=lambda x: channel_sort_key(x[0]))
-
-    # 5. 输出 M3U（自动 EPG）
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        f.write(
-    '#EXTM3U ' +
-    ' '.join([f'x-tvg-url="{u}"' for u in EPG_URLS]) +
-    f' tvg-logo="{LOGO_URL}"\n'
-)
-        for extinf, url in final:
+    # =========================
+    # 写入文件
+    # =========================
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write("#EXTM3U\n")
+        for extinf, u in sorted_final:
             f.write(extinf + "\n")
-            f.write(url + "\n")
+            f.write(u + "\n")
 
-    # 6. 保存 health
-    with open(HEALTH_FILE, "w", encoding="utf-8") as f:
-        json.dump(health, f, indent=2, ensure_ascii=False)
+    print(f"✅ 完成：共 {channel_index - 1} 个频道")
 
-    print("✅ IPTV 全自动运维完成（终极稳定版）")
-
+# =========================
+# 启动入口
+# =========================
 if __name__ == "__main__":
-    main()
+    with open("input.m3u", "r", encoding="utf-8", errors="ignore") as f:
+        lines = f.readlines()
+
+    process_m3u(lines, "output.m3u")
