@@ -2,19 +2,20 @@ name: Auto Update IPTV
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 每6小时自动更新
-  workflow_dispatch:      # 支持手动触发
+    - cron: '0 */6 * * *'   # 每6小时
+  workflow_dispatch:
 
 jobs:
   update-iptv:
     runs-on: ubuntu-latest
+
     steps:
       - name: 拉取仓库代码
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 确保能获取完整提交历史
+          fetch-depth: 0
 
-      - name: 配置Python环境
+      - name: 配置 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -22,20 +23,28 @@ jobs:
       - name: 安装依赖
         run: pip install requests
 
-      - name: 运行IPTV更新脚本
+      - name: 运行 IPTV 总聚合器
         run: python update.py
-        env:
-          M3U_SOURCE_URL: "https://raw.githubusercontent.com/bing57552/g/main/global_cn_4k1080p_multi.m3u"
 
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # ✅ 安全校验（强烈推荐）
+      - name: 校验输出文件
+        run: |
+          if [ ! -f ALL_IN_ONE.m3u ]; then
+            echo "❌ ALL_IN_ONE.m3u 未生成"
+            exit 1
+          fi
+          if [ $(wc -l < ALL_IN_ONE.m3u) -lt 10 ]; then
+            echo "❌ 输出内容异常，终止提交"
+            exit 1
+          fi
 
       - name: 提交并推送更新
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
-          git add output_best.m3u
+          git add ALL_IN_ONE.m3u
           if git diff --staged --quiet; then
-            echo "无IPTV源更新，跳过提交"
+            echo "无更新，跳过提交"
           else
             git commit -m "Auto update IPTV $(date +'%Y-%m-%d %H:%M:%S')"
             git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }}
