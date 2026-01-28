@@ -1,134 +1,90 @@
-import requests
-import re
-import time
 import os
-import logging
+import requests
 from collections import defaultdict
 
-# 日志配置
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+SOURCE_URL = os.environ.get(
+    "M3U_SOURCE_URL",
+    "https://raw.githubusercontent.com/bing57552/g/main/global_cn_4k1080p_multi.m3u"
+)
 
-class IPTVProcessor:
-    def __init__(self):
-        self.quality_priority = {
-            '4k': 10, '2160p': 10,
-            '1080p': 8, 'fhd': 8,
-            '720p': 4, 'hd': 4,
-            'sd': 1
-        }
+OUTPUT_FILE = "ALL_IN_ONE.m3u"
 
-    def normalize_name(self, name: str) -> str:
-        if not name:
-            return ''
-        name = re.sub(r'\(.*?\)|【.*?】|_备用.*|_主源.*', '', name)
-        name = re.sub(r'\s+', ' ', name)
-        return name.strip()
 
-    def extract_info(self, extinf: str):
-        name_match = re.search(r',(.+)$', extinf)
-        group_match = re.search(r'group-title="([^"]*)"', extinf)
-        quality = 'sd'
-        for q in self.quality_priority:
-            if q in extinf.lower():
-                quality = q
-                break
-        return {
-            "name": self.normalize_name(name_match.group(1)) if name_match else None,
-            "group": group_match.group(1) if group_match else "未分类",
-            "quality": quality,
-            "priority": self.quality_priority.get(quality, 1)
-        }
+def fetch_m3u(url: str) -> str:
+    r = requests.get(url, timeout=30)
+    r.raise_for_status()
+    return r.text
 
-    def test_url(self, url: str, timeout=6):
-        try:
-            start = time.time()
-            r = requests.head(
-                url,
-                timeout=timeout,
-                allow_redirects=True,
-                verify=False,
-                headers={'User-Agent': 'Mozilla/5.0'}
-            )
-            if r.status_code == 200:
-                delay = time.time() - start
-                score = max(0.1, 3 - delay)
-                return True, round(score, 2)
-        except:
-            pass
-        return False, 0.0
 
-    def process(self, m3u: str) -> str:
-        lines = m3u.splitlines()
-        channels = defaultdict(list)
+def parse_m3u(content: str):
+    """
+    返回结构:
+    {
+      (name, tvg_id, group): [url1, url2, ...]
+    }
+    """
+    channels = defaultdict(list)
 
-        i = 0
-        while i < len(lines):
-            if lines[i].startswith("#EXTINF"):
-                info = self.extract_info(lines[i])
-                if info and i + 1 < len(lines):
-                    url = lines[i + 1].strip()
-                    if url.startswith("http"):
-                        channels[info["name"]].append({
-                            "url": url,
-                            "group": info["group"],
-                            "priority": info["priority"]
-                        })
-                i += 2
-            else:
-                i += 1
+    lines = [l.strip() for l in content.splitlines() if l.strip()]
+    current_info = None
 
-        result = ["#EXTM3U"]
+    for line in lines:
+        if line.startswith("#EXTINF"):
+            # 解析 EXTINF
+            name = line.split(",")[-1].strip()
 
-        for name, sources in channels.items():
-            tested = []
-            for s in sources:
-                ok, speed = self.test_url(s["url"])
-                if ok:
-                    s["speed"] = speed
-                    s["score"] = s["priority"] * 10 + speed
-                    tested.append(s)
+            def pick(key):
+                if f'{key}="' in line:
+                    return line.split(f'{key}="')[1].split('"')[0]
+                return ""
 
-            if not tested:
-                continue
+            tvg_id = pick("tvg-id")
+            group = pick("group-title") or "其他"
 
-            tested.sort(key=lambda x: x["score"], reverse=True)
-            best = tested[0]
+            current_info = (name, tvg_id, group)
 
-            # ✅ 只写一次 EXTINF
-            result.append(
-                f'#EXTINF:-1 tvg-name="{name}" group-title="{best["group"]}",{name}'
+        elif line.startswith("#"):
+            continue
+        else:
+            # URL 行
+            if current_info:
+                channels[current_info].append(line)
+
+    return channels
+
+
+def write_all_in_one(channels: dict):
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write("#EXTM3U\n\n")
+
+        for (name, tvg_id, group), urls in sorted(channels.items()):
+            f.write(
+                f'#EXTINF:-1 tvg-id="{tvg_id}" group-title="{group}",{name}\n'
             )
 
-            # ✅ 多个源只写 URL
-            for s in tested:
-                result.append(s["url"])
+            # URL 去重但保持顺序
+            seen = set()
+            for u in urls:
+                if u not in seen:
+                    seen.add(u)
+                    f.write(u + "\n")
 
-            logger.info(f"✅ {name} 合并 {len(tested)} 个源")
-
-        return "\n".join(result)
+            f.write("\n")
 
 
 def main():
-    url = os.getenv("M3U_SOURCE_URL")
-    if not url:
-        logger.error("未设置 M3U_SOURCE_URL")
-        return
+    print("📥 下载源:", SOURCE_URL)
+    content = fetch_m3u(SOURCE_URL)
 
-    try:
-        r = requests.get(url, timeout=15, verify=False)
-        r.raise_for_status()
-    except Exception as e:
-        logger.error(f"拉取源失败: {e}")
-        return
+    print("🔍 解析并聚合频道…")
+    channels = parse_m3u(content)
 
-    processor = IPTVProcessor()
-    output = processor.process(r.text)
+    print(f"📺 聚合完成：{len(channels)} 个频道")
 
-    with open("ALL_IN_ONE.m3u", "w", encoding="utf-8") as f:
-        f.write(output)
+    print("✍️ 写入 ALL_IN_ONE.m3u")
+    write_all_in_one(channels)
 
-    logger.info("🎉 ALL_IN_ONE.m3u 已生成")
+    print("✅ 完成")
 
 
 if __name__ == "__main__":
