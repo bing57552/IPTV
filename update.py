@@ -47,7 +47,7 @@ DRAMA_MOVIE_WHITELIST = {
     "纬来", "东森", "三立", "八大",
     "华视", "台视", "民视","gtv",
     "mediacorp", "channel 8", "channel u",
-    "astro"
+    "astro","tvbmytvsuper"
 }
 
 # =========================
