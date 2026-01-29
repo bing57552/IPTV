@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-import sys
-import time
 import socket
 import requests
 from collections import defaultdict
@@ -12,6 +10,9 @@ from urllib.parse import urlparse
 # =========================
 # 基础配置
 # =========================
+M3U_SOURCE_URL = (
+    "https://raw.githubusercontent.com/bing57552/g/main/global_cn_4k1080p_multi.m3u"
+)
 INPUT_FILE = "input.m3u"
 OUTPUT_FILE = "output.m3u"
 TIMEOUT = 6
@@ -35,14 +36,14 @@ AD_CHANNEL_KEYWORDS = {
 # 影视 / 剧集 白名单（防误杀）
 # =========================
 DRAMA_MOVIE_WHITELIST = {
-    "cctv-6", "cctv-8","drama","movie",
+    "cctv-6", "cctv-8", "drama", "movie",
     "chc", "影迷", "动作电影", "家庭影院",
     "电影", "影院", "影视", "戏剧", "剧场",
     "tvb", "翡翠", "明珠", "j2", "星河",
-    "凤凰电影", "凤凰中文","catchplay",
-    "celestial", "天映","Popc","8tv",
-    "hbo", "cinemax","iqiyi","meiah",
-    "viu", "now","disney+","netflix"
+    "凤凰电影", "凤凰中文", "catchplay",
+    "celestial", "天映", "popc", "8tv",
+    "hbo", "cinemax", "iqiyi", "meiah",
+    "viu", "now", "disney+", "netflix",
     "纬来", "东森", "三立", "八大",
     "华视", "台视", "民视",
     "mediacorp", "channel 8", "channel u",
@@ -50,16 +51,15 @@ DRAMA_MOVIE_WHITELIST = {
 }
 
 # =========================
-# EPG 精准映射
+# EPG 精准映射（模糊命中）
 # =========================
 EPG_ID_MAP = {
     "凤凰中文": "PhoenixChinese",
     "凤凰资讯": "PhoenixInfo",
     "凤凰香港": "PhoenixHK",
-    "NOW星影": "NowBaoguMovies",
-    "Now爆谷": "NowBaoguMovies",
+    "now": "NowBaoguMovies",
+    "爆谷": "NowBaoguMovies",
     "中天新闻": "CTiNews",
-    "亚洲卫视": "AsiaTV",
 }
 
 # =========================
@@ -78,27 +78,38 @@ def is_ad_or_shop(name: str) -> bool:
 
 def is_stream_alive(url: str) -> bool:
     try:
-        parsed = urlparse(url)
-        host = parsed.hostname
-        if not host:
-            return False
-        socket.setdefaulttimeout(TIMEOUT)
-        socket.gethostbyname(host)
-        return True
+        r = requests.head(url, timeout=TIMEOUT, allow_redirects=True)
+        return r.status_code < 400
     except Exception:
         return False
 
 
-def detect_quality(url: str) -> str:
+def detect_quality(url: str) -> int:
     u = url.lower()
     if "2160" in u or "4k" in u:
-        return "4K"
+        return 4
     if "1080" in u:
-        return "1080P"
+        return 3
     if "720" in u:
-        return "720P"
-    return "HD"
+        return 2
+    return 1
 
+
+def get_epg_id(name: str) -> str:
+    for k, v in EPG_ID_MAP.items():
+        if k.lower() in name.lower():
+            return v
+    return ""
+
+
+# =========================
+# 下载 M3U
+# =========================
+print("⬇️ 下载源文件...")
+resp = requests.get(M3U_SOURCE_URL, timeout=15)
+resp.raise_for_status()
+with open(INPUT_FILE, "w", encoding="utf-8") as f:
+    f.write(resp.text)
 
 # =========================
 # 读取 M3U
@@ -108,84 +119,77 @@ with open(INPUT_FILE, "r", encoding="utf-8", errors="ignore") as f:
 
 channels = []
 i = 0
-while i < len(lines):
+while i < len(lines) - 1:
     if lines[i].startswith("#EXTINF"):
-        extinf = lines[i]
-        url = lines[i + 1] if i + 1 < len(lines) else ""
-        channels.append((extinf, url))
+        channels.append((lines[i], lines[i + 1]))
         i += 2
     else:
         i += 1
 
 # =========================
-# 聚合频道
+# 聚合 + 过滤 + 探活
 # =========================
 all_channels = defaultdict(list)
 
 for extinf, url in channels:
-    name_match = re.search(r",(.+)$", extinf)
-    if not name_match:
+    m = re.search(r",(.+)$", extinf)
+    if not m:
         continue
 
-    name = name_match.group(1).strip()
-
+    name = m.group(1).strip()
     if is_ad_or_shop(name):
         continue
-
     if not is_stream_alive(url):
         continue
 
-    all_channels[name].append((extinf, url))
+    all_channels[name].append(url)
 
 # =========================
-# 生成 final
+# 生成 final（多源 + 稳定优先）
 # =========================
 final = []
 
-for name, items in all_channels.items():
-    tvg_id = EPG_ID_MAP.get(name, "")
-    logo = ""
-    if tvg_id:
-        logo = f'https://raw.githubusercontent.com/fanmingming/live/main/tv/{tvg_id}.png'
+for name, urls in all_channels.items():
+    epg_id = get_epg_id(name)
+    logo = (
+        f"https://raw.githubusercontent.com/fanmingming/live/main/tv/{epg_id}.png"
+        if epg_id else ""
+    )
 
-    for _, url in items:
-        quality = detect_quality(url)
+    urls.sort(key=detect_quality, reverse=True)
 
-        extinf = f'#EXTINF:-1 tvg-name="{name}"'
-        if tvg_id:
-            extinf += f' tvg-id="{tvg_id}"'
+    for url in urls:
+        q = detect_quality(url)
+        label = {4: "4K", 3: "1080P", 2: "720P", 1: "HD"}[q]
+
+        ext = f'#EXTINF:-1 tvg-name="{name}"'
+        if epg_id:
+            ext += f' tvg-id="{epg_id}"'
         if logo:
-            extinf += f' tvg-logo="{logo}"'
-        extinf += f',{name} | {quality}'
+            ext += f' tvg-logo="{logo}"'
+        ext += f",{name} | {label}"
 
-        final.append((extinf, url))
+        final.append((name, q, ext, url))
 
 # =========================
-# 排序 + 编号（稳定）
+# 稳定排序 + 编号
 # =========================
-final.sort(key=lambda x: x[0])
+final.sort(key=lambda x: (x[0], -x[1]))
 
-sorted_final = []
-channel_index = 1
-
-for extinf, url in final:
-    if 'tvg-chno' not in extinf:
-        extinf = extinf.replace(
-            '#EXTINF:-1 ',
-            f'#EXTINF:-1 tvg-chno="{channel_index}" '
-        )
-    sorted_final.append((extinf, url))
-    channel_index += 1
-
-final = sorted_final
+output = []
+chno = 1
+for _, _, ext, url in final:
+    ext = ext.replace("#EXTINF:-1 ", f'#EXTINF:-1 tvg-chno="{chno}" ')
+    output.append((ext, url))
+    chno += 1
 
 # =========================
 # 写出文件
 # =========================
 with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
     f.write("#EXTM3U\n")
-    for extinf, url in final:
-        f.write(extinf + "\n")
+    for ext, url in output:
+        f.write(ext + "\n")
         f.write(url + "\n")
 
-print(f"✅ 完成：{len(final)} 条频道输出 → {OUTPUT_FILE}")
+print(f"✅ 完成：{len(output)} 条频道 → {OUTPUT_FILE}")
