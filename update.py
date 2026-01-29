@@ -35,13 +35,13 @@ AD_CHANNEL_KEYWORDS = {
 # 影视 / 剧集 白名单（防误杀）
 # =========================
 DRAMA_MOVIE_WHITELIST = {
-    "cctv-6", "cctv-8",
+    "cctv-6", "cctv-8","drama","movie",
     "chc", "影迷", "动作电影", "家庭影院",
     "电影", "影院", "影视", "戏剧", "剧场",
     "tvb", "翡翠", "明珠", "j2", "星河",
     "凤凰电影", "凤凰中文","catchplay",
     "celestial", "天映","Popc","8tv",
-    "hbo", "cinemax","iqiyi","mei ah",
+    "hbo", "cinemax","iqiyi","meiah",
     "viu", "now","disney+","netflix"
     "纬来", "东森", "三立", "八大",
     "华视", "台视", "民视",
