@@ -45,7 +45,7 @@ DRAMA_MOVIE_WHITELIST = {
     "hbo", "cinemax", "iqiyi", "meiah",
     "viu", "now", "disney+", "netflix",
     "纬来", "东森", "三立", "八大",
-    "华视", "台视", "民视",
+    "华视", "台视", "民视","gtv",
     "mediacorp", "channel 8", "channel u",
     "astro"
 }
