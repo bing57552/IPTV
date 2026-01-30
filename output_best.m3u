@@ -1,1 +1,35 @@
-#EXTM3U x-tvg-url="https://epg.112114.xyz/pp.xml"
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-ALLOW-CACHE:YES
+
+# 香港 Now TV 美亞電影台（國語）
+#EXTINF:-1 tvg-name="美亞電影台" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/美亚电影.png" group-title="電影",美亞電影台 | 多源
+http://50.7.161.82:8278/streams/d/meiya_pye/playlist.m3u8|http://iptv.tvfix.org/hls/mydy2.m3u8|http://198.16.64.10:8278/meiyamovie_twn/playlist.m3u8
+
+# 台灣天映電影頻道（國語）
+#EXTINF:-1 tvg-name="天映電影" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/天映.png" group-title="電影",天映電影 | 多源
+https://hls-gateway.vpstv.net/streams/476310.m3u8|http://50.7.161.82:8278/streams/d/celestial_pye/playlist.m3u8|http://iptv.tvfix.org/hls/tyjd2.m3u8
+
+# 馬來西亞 Astro Catchplay（國語電影）
+#EXTINF:-1 tvg-name="Astro Catchplay" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/Catchplay.png" group-title="電影",Astro Catchplay | 多源
+https://hls-gateway.vpstv.net/streams/708881.m3u8|http://50.7.161.82:8278/streams/d/catchplay_pye/playlist.m3u8|http://iptv.tvfix.org/hls/catchplay.m3u8
+
+# 馬來西亞 Astro AOD（國語點播電影/劇集）
+#EXTINF:-1 tvg-name="Astro AOD" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/AstroAOD.png" group-title="電影",Astro AOD | 多源
+http://50.7.161.82:8278/streams/d/aod_pye/playlist.m3u8|http://pixman.mytvsuper.com.mp/Smart.php?id=AOD|http://iptv.tvfix.org/hls/aod.m3u8
+
+# 馬來西亞 Astro 华丽台（國語劇集）
+#EXTINF:-1 tvg-name="Astro 华丽台" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/Astro华丽台.png" group-title="劇集",Astro 华丽台 | 多源
+http://50.7.161.82:8278/streams/d/Wlt/playlist.m3u8|http://iptv.tvfix.org/hls/wlt.m3u8|http://23.26.239.95:3599/xsj.php?id=astro-wlt
+
+# 新加坡 HBO（國語/原聲電影）
+#EXTINF:-1 tvg-name="HBO" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/HBO.png" group-title="電影",HBO | 多源
+http://cloud-play.hhalloy.com/live/fcdd3a3c591bdd0b07a17a92cb555cc1.m3u8|http://220.134.196.147:9520/http/60.251.39.91:8081/hls/71/813/ch41.m3u8
+
+# 新加坡 HUB 戏剧台（國語劇）
+#EXTINF:-1 tvg-name="HUB 戏剧台" tvg-logo="https://example.com/hub-drama.png" group-title="劇集",HUB 戏剧台 | 多源
+http://cloud-play.hhalloy.com/live/440b3d3c474813d7ead7d3a795978e69.m3u8
+
+# CHC 高清電影（國語輪播）
+#EXTINF:-1 tvg-name="CHC 高清電影" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/CHC高清电影.png" group-title="電影",CHC 高清電影 | 多源
+http://iptv.tvfix.org/hls/chchd.m3u8|http://223.151.51.27:85/tsfile/live/1020_1.m3u8|http://59.56.75.17/live.aishang.ctlcdn.com
