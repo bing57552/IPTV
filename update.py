@@ -285,4 +285,3 @@ with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(url + "\n")
 
 print(f"✅ 完成：{len(output)} 条频道 → {OUTPUT_FILE}")
-print("提示：OTT 源灰色易失效，建议合法订阅官方App + VPN；定期检查 FORCED_SOURCES 更新源")
