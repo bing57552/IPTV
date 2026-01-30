@@ -1,4 +1,43 @@
-#EXTM3U
+# =========================
+# 马来西亚所有普通话/国语 华语频道（電影 + 电视剧 + 綜藝 + 新聞，華語優先）
+# 2026 年 1 月最新聚合源，美國WV位置建議開馬來西亞/新加坡/香港VPN
+# =========================
+
+# Astro 华丽台 (國語偶像劇/華語劇集/電影)
+#EXTINF:-1 tvg-id="AstroWahLaiToi.my" tvg-name="Astro 华丽台" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/Astro华丽台.png" group-title="馬來西亞華語劇",Astro 华丽台 (國語偶像劇/華語劇集) | 多源
+http://50.7.161.82:8278/streams/d/Wlt/playlist.m3u8|http://iptv.tvfix.org/hls/wlt.m3u8|http://23.26.239.95:3599/xsj.php?id=astro-wlt|http://pixman.mytvsuper.com.mp/Smart.php?id=WLT|http://hl2341685.github.io/tv/streams/Wlt.m3u8
+
+# Astro AOD (國語點播電影/劇集輪播)
+#EXTINF:-1 tvg-id="AstroAOD.my" tvg-name="Astro AOD" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/AstroAOD.png" group-title="馬來西亞華語電影",Astro AOD (國語點播電影/劇集) | 多源
+http://50.7.161.82:8278/streams/d/aod_pye/playlist.m3u8|http://pixman.mytvsuper.com.mp/Smart.php?id=AOD|http://iptv.tvfix.org/hls/aod.m3u8|http://23.26.239.95:3599/xsj.php?id=astro-aod|http://hl2341685.github.io/tv/streams/AOD.m3u8
+
+# Astro 欢喜台 (國語歡樂/家庭劇/綜藝)
+#EXTINF:-1 tvg-id="AstroHuanXi.my" tvg-name="Astro 欢喜台" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/Astro欢喜台.png" group-title="馬來西亞華語劇",Astro 欢喜台 (國語歡樂劇/家庭劇) | 多源
+http://50.7.161.82:8278/streams/d/huanxi/playlist.m3u8|http://iptv.tvfix.org/hls/huanxi.m3u8|http://23.26.239.95:3599/xsj.php?id=astro-huanxi|http://pixman.mytvsuper.com.mp/Smart.php?id=HXT|http://hl2341685.github.io/tv/streams/Huanxi.m3u8
+
+# Astro AEC (國語娛樂劇/華語劇集/綜藝)
+#EXTINF:-1 tvg-id="AstroAEC.my" tvg-name="Astro AEC" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/AstroAEC.png" group-title="馬來西亞華語劇",Astro AEC (國語娛樂劇/華語劇集) | 多源
+http://50.7.161.82:8278/streams/d/aec/playlist.m3u8|http://iptv.tvfix.org/hls/aec.m3u8|http://pixman.mytvsuper.com.mp/Smart.php?id=AEC|http://23.26.239.95:3599/xsj.php?id=astro-aec|http://hl2341685.github.io/tv/streams/AEC.m3u8
+
+# Astro 兆烽台 (國語華語劇/電影/綜藝)
+#EXTINF:-1 tvg-id="AstroZhaoFeng.my" tvg-name="Astro 兆烽台" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/Astro兆烽台.png" group-title="馬來西亞華語劇",Astro 兆烽台 (國語華語劇/電影) | 多源
+http://50.7.161.82:8278/streams/d/zhaofeng/playlist.m3u8|http://iptv.tvfix.org/hls/zhaofeng.m3u8|http://23.26.239.95:3599/xsj.php?id=astro-zhaofeng|http://pixman.mytvsuper.com.mp/Smart.php?id=ZFT|http://hl2341685.github.io/tv/streams/Zhaofeng.m3u8
+
+# Astro 喜悅台 (國語喜劇/劇集/綜藝)
+#EXTINF:-1 tvg-id="AstroXiYue.my" tvg-name="Astro 喜悅台" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/Astro喜悅台.png" group-title="馬來西亞華語綜藝",Astro 喜悅台 (國語喜劇/劇集) | 多源
+http://50.7.161.82:8278/streams/d/xiyue/playlist.m3u8|http://iptv.tvfix.org/hls/xiyue.m3u8|http://23.26.239.95:3599/xsj.php?id=astro-xiyue|http://pixman.mytvsuper.com.mp/Smart.php?id=Xiyue|http://hl2341685.github.io/tv/streams/Xiyue.m3u8
+
+# Astro Cinema (國語電影輪播)
+#EXTINF:-1 tvg-id="AstroCinema.my" tvg-name="Astro Cinema" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/AstroCinema.png" group-title="馬來西亞華語電影",Astro Cinema (國語電影輪播/華語片) | 多源
+http://50.7.161.82:8278/streams/d/astro-cinema/playlist.m3u8|http://iptv.tvfix.org/hls/astro-cinema.m3u8|http://23.26.239.95:3599/xsj.php?id=astro-cinema|http://pixman.mytvsuper.com.mp/Smart.php?id=Cinema|http://hl2341685.github.io/tv/streams/Cinema.m3u8
+
+# 八度空間 (8TV) (馬來西亞免費華語綜合台，國語劇集/綜藝/電影/新聞)
+#EXTINF:-1 tvg-id="8TV.my" tvg-name="八度空間 (8TV)" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/8TV.png" group-title="馬來西亞華語綜合",八度空間 (8TV) (國語/華語綜合頻道) | 多源
+http://iptv.tvfix.org/hls/8tv.m3u8|http://23.26.239.95:3599/xsj.php?id=8tv|http://50.7.161.82:8278/streams/d/8tv/playlist.m3u8|http://hl2341685.github.io/tv/streams/8TV.m3u8|http://198.16.64.10:8278/8tv_twn/playlist.m3u8
+
+# Astro 小太阳 (國語兒童劇/卡通/教育)
+#EXTINF:-1 tvg-id="AstroXiaoTaiYang.my" tvg-name="Astro 小太阳" tvg-logo="https://raw.githubusercontent.com/fanmingming/live/main/tv/Astro小太阳.png" group-title="馬來西亞華語兒童",Astro 小太阳 (國語兒童劇/卡通) | 多源
+http://50.7.161.82:8278/streams/d/xiaotaiyang/playlist.m3u8|http://iptv.tvfix.org/hls/xiaotaiyang.m3u8|http://23.26.239.95:3599/xsj.php?id=astro-xiaotaiyang|http://hl2341685.github.io/tv/streams/XiaoTaiYang.m3u8#EXTM3U
 
 # =========================
 #      香港频道（稳定）
